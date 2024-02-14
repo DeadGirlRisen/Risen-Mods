@@ -140,6 +140,14 @@ class Events:
                 
             Cat.grief_strings.clear()
 
+        # Handle funeral rites
+        funeral_resource = "resources/dicts/events/death/death_reactions/"
+        with open(f"{funeral_resource}clan_reaction.json", encoding="ascii") as read_file:
+            Funeralrites = ujson.load(read_file)
+
+        # Add debug statements to check contents of Funeralrites
+        print("Funeralrites content:", Funeralrites)
+
         if Cat.dead_cats:
             ghost_names = []
             shaken_cats = []
@@ -147,12 +155,24 @@ class Events:
             for ghost in Cat.dead_cats:
                 ghost_names.append(str(ghost.name))
             insert = adjust_list_text(ghost_names)
+            print("Immediate Ghost Names:", ghost_names)
+            biome = game.clan.biome
+            camp_bg = game.clan.camp_bg
+            print("Biome:", biome)
+            print("Camp background:", camp_bg)
 
             if len(Cat.dead_cats) > 1 and game.clan.game_mode != 'classic':
-                event = f"The past moon, {insert} have taken their place in StarClan. {game.clan.name}Clan mourns their " \
-                        f"loss, and their Clanmates will miss where they had been in their lives. Moments of their " \
-                        f"lives are shared in stories around the circle of mourners as those that were closest to them " \
-                        f"take them to their final resting place."
+                funeral = Funeralrites.get(biome, {}).get(camp_bg, {}).get("multi_cats", [])
+                funeral_event = random.choice(funeral) if funeral else None
+                if funeral_event != None:
+                    deceased_cats = cat.dead_cats[0]
+                    print("dead multi cats:", deceased_cats)
+                    event = event_text_adjust(Cat, funeral_event, clan=game.clan, cat=deceased_cats).format(insert=insert)
+                else:
+                    event = f"The past moon, {insert} have taken their place in StarClan. {game.clan.name}Clan mourns their " \
+                            f"loss, and their Clanmates will miss where they had been in their lives. Moments of their " \
+                            f"lives are shared in stories around the circle of mourners as those that were closest to them " \
+                            f"take them to their final resting place."
 
                 if len(ghost_names) > 2:
                     alive_cats = list(
@@ -180,10 +200,17 @@ class Events:
                         extra_event = f"So much grief and death has taken its toll on the cats of {game.clan.name}Clan. {insert} are particularly shaken by it. "
 
             else:
-                event = f"The past moon, {insert} has taken their place in StarClan. {game.clan.name}Clan mourns their " \
-                        f"loss, and their Clanmates will miss the spot they took up in their lives. Moments of their " \
-                        f"life are shared in stories around the circle of mourners as those that were closest to them " \
-                        f"take them to their final resting place."
+                funeral = Funeralrites.get(biome, {}).get(camp_bg, {}).get("single_cat", [])
+                funeral_event = random.choice(funeral) if funeral else None
+                if funeral_event != None:
+                    deceased_cat = cat.dead_cats[0]
+                    print("dead single cat:", deceased_cat)
+                    event = event_text_adjust(Cat, funeral_event, clan=game.clan, cat=deceased_cat).format(insert=insert)
+                    print("Selected funeral event:", event)
+                    event = f"The past moon, {insert} has taken their place in StarClan. {game.clan.name}Clan mourns their " \
+                            f"loss, and their Clanmates will miss the spot they took up in their lives. Moments of their " \
+                            f"life are shared in stories around the circle of mourners as those that were closest to them " \
+                            f"take them to their final resting place."
 
             game.cur_events_list.append(
                 Single_Event(event, ["birth_death"],
