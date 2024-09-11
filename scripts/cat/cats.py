@@ -200,7 +200,6 @@ class Cat:
         self.adoptive_parents = []
         self.pelt = pelt if pelt else Pelt()
         self.former_mentor = []
-        self.patrol_with_mentor = 0
         self.apprentice = []
         self.former_apprentices = []
         self.relationships = {}
@@ -2320,7 +2319,6 @@ class Cat:
     def __add_mentor(self, new_mentor_id: str):
         """Should only be called by update_mentor, also sets fields on mentor."""
         # reset patrol number
-        self.patrol_with_mentor = 0
         self.mentor = new_mentor_id
         mentor_cat = Cat.fetch_cat(self.mentor)
         if not mentor_cat:
@@ -3368,9 +3366,6 @@ class Cat:
                 "mentor": self.mentor if self.mentor else None,
                 "former_mentor": (
                     [cat for cat in self.former_mentor] if self.former_mentor else []
-                ),
-                "patrol_with_mentor": (
-                    self.patrol_with_mentor if self.patrol_with_mentor else 0
                 ),
                 "mate": self.mate,
                 "previous_mates": self.previous_mates,
